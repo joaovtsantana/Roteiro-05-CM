@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() => runApp(const MaterialApp(home: MeuApp()));
+
+class MeuApp extends StatefulWidget {
+  const MeuApp({super.key});
+
+  @override
+  State<MeuApp> createState() => _MeuAppState();
+}
+
+class _MeuAppState extends State<MeuApp> {
+  final produtos = ['Produto A', 'Produto B', 'Produto C'];
+  List<String> carrinho = [];
+
+  @override
+  void initState() {
+    super.initState();
+    carregarCarrinho();
+  }
+
+  Future<void> carregarCarrinho() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      carrinho = prefs.getStringList('carrinho') ?? [];
+    });
+  }
+
+  Future<void> adicionar(String produto) async {
+    carrinho.add(produto);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('carrinho', carrinho);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Carrinho')),
+      body: Column(
+        children: [
+          ...produtos.map((produto) => ListTile(
+                title: Text(produto),
+                trailing: ElevatedButton(
+                  onPressed: () => adicionar(produto),
+                  child: const Text('Adicionar ao carrinho'),
+                ),
+              )),
+          const Divider(),
+          const Text('Itens do carrinho:',
+              style: TextStyle(fontSize: 20)),
+          Expanded(
+            child: ListView(
+              children: carrinho
+                  .map((item) => ListTile(title: Text(item)))
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
