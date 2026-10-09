@@ -1,0 +1,65 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() => runApp(const MaterialApp(home: MeuApp()));
+
+class MeuApp extends StatefulWidget {
+  const MeuApp({super.key});
+
+  @override
+  State<MeuApp> createState() => _MeuAppState();
+}
+
+class _MeuAppState extends State<MeuApp> {
+  final nome = TextEditingController();
+  final email = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    carregarDados();
+  }
+
+  Future<void> carregarDados() async {
+    final prefs = await SharedPreferences.getInstance();
+    nome.text = prefs.getString('nome') ?? '';
+    email.text = prefs.getString('email') ?? '';
+    setState(() {});
+  }
+
+  Future<void> salvar(String chave, String valor) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(chave, valor);
+  }
+
+  @override
+  void dispose() {
+    nome.dispose();
+    email.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Formulário')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: nome,
+              decoration: const InputDecoration(labelText: 'Nome'),
+              onChanged: (valor) => salvar('nome', valor),
+            ),
+            TextField(
+              controller: email,
+              decoration: const InputDecoration(labelText: 'Email'),
+              onChanged: (valor) => salvar('email', valor),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
