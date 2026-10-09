@@ -1,0 +1,61 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() => runApp(const MaterialApp(home: MeuApp()));
+
+class MeuApp extends StatefulWidget {
+  const MeuApp({super.key});
+
+  @override
+  State<MeuApp> createState() => _MeuAppState();
+}
+
+class _MeuAppState extends State<MeuApp> {
+  String pagina = 'Página A';
+
+  @override
+  void initState() {
+    super.initState();
+    carregarPagina();
+  }
+
+  Future<void> carregarPagina() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      pagina = prefs.getString('pagina') ?? 'Página A';
+    });
+  }
+
+  Future<void> selecionarPagina(String nome) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pagina', nome);
+    setState(() => pagina = nome);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Última página')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Página selecionada: $pagina'),
+            ElevatedButton(
+              onPressed: () => selecionarPagina('Página A'),
+              child: const Text('Página A'),
+            ),
+            ElevatedButton(
+              onPressed: () => selecionarPagina('Página B'),
+              child: const Text('Página B'),
+            ),
+            ElevatedButton(
+              onPressed: () => selecionarPagina('Página C'),
+              child: const Text('Página C'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
