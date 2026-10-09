@@ -1,0 +1,175 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(const MeuApp());
+}
+
+class MeuApp extends StatelessWidget {
+  const MeuApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Persistência de Dados',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
+        useMaterial3: true,
+      ),
+      home: const TelaPrincipal(),
+    );
+  }
+}
+
+class TelaPrincipal extends StatefulWidget {
+  const TelaPrincipal({super.key});
+
+  @override
+  State<TelaPrincipal> createState() => _TelaPrincipalState();
+}
+
+class _TelaPrincipalState extends State<TelaPrincipal> {
+  final TextEditingController controller =
+      TextEditingController();
+
+  List<String> tarefas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    carregarDados();
+  }
+
+  // Carrega os dados salvos
+  Future<void> carregarDados() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      tarefas = prefs.getStringList('tarefas') ?? [];
+    });
+  }
+
+  // Adiciona e salva uma tarefa
+  Future<void> adicionarTarefa() async {
+    if (controller.text.trim().isEmpty) return;
+
+    tarefas.add(controller.text.trim());
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('tarefas', tarefas);
+
+    controller.clear();
+
+    setState(() {});
+  }
+
+  // Remove uma tarefa específica
+  Future<void> removerTarefa(int index) async {
+    tarefas.removeAt(index);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('tarefas', tarefas);
+
+    setState(() {});
+  }
+
+  // Limpa todos os dados salvos
+  Future<void> limparTudo() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.remove('tarefas');
+
+    setState(() {
+      tarefas.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Todos os dados foram apagados!'),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Persistência de Dados'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Digite uma tarefa',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: adicionarTarefa,
+                child: const Text('Adicionar'),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed:
+                    tarefas.isEmpty ? null : limparTudo,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Limpar tudo'),
+              ),
+            ),
+
+            const Divider(),
+
+            Expanded(
+              child: tarefas.isEmpty
+                  ? const Center(
+                      child: Text('Nenhuma tarefa salva.'),
+                    )
+                  : ListView.builder(
+                      itemCount: tarefas.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(tarefas[index]),
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                            ),
+                            onPressed: () =>
+                                removerTarefa(index),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
